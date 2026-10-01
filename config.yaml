@@ -68,8 +68,12 @@ email_when_empty: true
 # Adzuna/Reed APIs are still used *as well* if you add their keys as secrets.
 job_boards:
   linkedin: {enabled: true, pages: 3, delay_seconds: 3}   # 25 jobs per page
+  # Indeed blocks GitHub's servers (HTTP 403) – kept on in case that changes;
+  # it costs nothing but one line in the 'couldn't check' list. Works locally.
   indeed:   {enabled: true, pages: 2, delay_seconds: 3}   # 10-15 jobs per page
-  guardian: {enabled: true, pages: 2, delay_seconds: 3}   # 20 jobs per page
+  # Guardian Jobs blocks GitHub's servers on its normal pages, but its RSS
+  # feed works – see rss_feeds below. Leave this off unless running locally.
+  guardian: {enabled: false, pages: 2, delay_seconds: 3}
 
 # ---- Grouping in the email (first match wins; matched on employer + title) ----
 categories:
@@ -90,6 +94,7 @@ rss_feeds:
   - name: Guardian Jobs (RSS)
     url: "https://jobs.theguardian.com/jobsrss/london/?keywords={kw}"
     employer: Guardian Jobs
+    employer_in_title: true
     require_london: false
   # - name: jobs.ac.uk – biodiversity London
   #   url: PASTE_RSS_LINK_HERE

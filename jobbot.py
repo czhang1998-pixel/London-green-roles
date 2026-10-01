@@ -319,8 +319,12 @@ def from_rss():
                 if feed.get("require_london", True) and "london" not in text.lower():
                     continue
                 jid = e.get("id") or e.get("link")
-                j = make_job("rss", hashlib.md5(jid.encode()).hexdigest(), e.get("title", ""),
-                             feed.get("employer", feed["name"]), "London", e.get("link"),
+                title, employer = e.get("title", ""), feed.get("employer", feed["name"])
+                if feed.get("employer_in_title") and ": " in title:
+                    employer, title = title.split(": ", 1)  # e.g. "TETRA TECH: Graduate Planner"
+                    employer = employer.title() if employer.isupper() else employer
+                j = make_job("rss", hashlib.md5(jid.encode()).hexdigest(), title,
+                             employer, "London", e.get("link"),
                              e.get("published", ""), "", e.get("summary", ""))
                 if j:
                     j["source"] = feed["name"]
@@ -369,6 +373,28 @@ def scan_page(page, text):
     return jobs
 
 
+def _fetch_page(url):
+    """Some sites only work with a plain agent, others only with a browser-like
+    one, so try both and keep the response with the most job-like links."""
+    best, last_err = None, None
+    for headers in (UA, BROWSER):
+        try:
+            r = requests.get(url, headers=headers, timeout=30)
+            r.raise_for_status()
+        except Exception as ex:
+            last_err = ex
+            continue
+        links = sum(1 for a in BeautifulSoup(r.text, "html.parser").find_all("a", href=True)
+                    if JOB_LINK.search(a["href"]))
+        if best is None or links > best[1]:
+            best = (r.text, links)
+        if links >= 5:
+            break
+    if best is None:
+        raise last_err
+    return best
+
+
 def from_pages():
     """Scan careers pages and job-board search pages for keyword links/headings."""
     jobs, failed = [], set()
@@ -376,13 +402,10 @@ def from_pages():
         if page["name"] in failed:
             continue
         try:
-            r = requests.get(page["url"], headers=BROWSER, timeout=30)
-            r.raise_for_status()
-            found = scan_page(page, r.text)
+            text, links = _fetch_page(page["url"])
+            found = scan_page(page, text)
             jobs += found
             if CHECK:
-                links = sum(1 for a in BeautifulSoup(r.text, "html.parser").find_all("a", href=True)
-                            if JOB_LINK.search(a["href"]))
                 print(f"  OK   {page['name']:<28} {len(found):>3} matches, {links:>3} job-like links  {page['url']}")
         except Exception as ex:
             if CHECK:
