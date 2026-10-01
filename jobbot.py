@@ -4,12 +4,12 @@ Sources: LinkedIn, Indeed, Guardian Jobs, optional Adzuna/Reed APIs, RSS feeds, 
 Outputs: docs/index.html (web page), digest.md (weekly GitHub issue), optional email.
 Settings live in config.yaml; secrets come from environment variables.
 """
-import os, re, json, time, hashlib, smtplib, datetime, html
+import os, re, sys, json, time, hashlib, smtplib, datetime, html
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 import requests, yaml, feedparser
-from urllib.parse import quote_plus, urljoin
+from urllib.parse import quote_plus, urljoin, urlparse
 from bs4 import BeautifulSoup
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -29,18 +29,31 @@ TODAY = datetime.date.today().isoformat()
 KEYWORDS = CFG["keywords"]
 TITLE_ONLY = [k.lower() for k in CFG.get("title_only_keywords", [])]
 EXCLUDE = [e.lower() for e in CFG.get("exclude_phrases", [])]
+VARIANTS = {k.lower(): v for k, v in (CFG.get("keyword_variants") or {}).items()}
+CONTEXT = {k.lower(): [w.lower() for w in v] for k, v in (CFG.get("keyword_context") or {}).items()}
+JOB_LINK = re.compile(CFG.get("job_link_pattern", r"job|vacanc|career|position|opening|role|recruit|apply"), re.I)
 errors = []
+CHECK = "--check" in sys.argv  # test every source, print results, save nothing
 
 
 # ---------- matching & classification ----------
-def find_keywords(title, body=""):
-    """Return keywords matched. Title-only keywords must appear in the title."""
+def find_keywords(title, body="", employer=""):
+    """Return keywords matched.
+    - title_only_keywords must appear in the title.
+    - keyword_variants also count (e.g. "planner" for "planning").
+    - keyword_context: the keyword only counts if the title or employer also
+      contains one of the context words (e.g. "town" for "planning")."""
     hits = []
     for k in KEYWORDS:
-        pat = r"\b" + re.escape(k) + r"\b"
+        words = [k] + VARIANTS.get(k.lower(), [])
+        pat = r"\b(" + "|".join(re.escape(w) for w in words) + r")\b"
         text = title if k.lower() in TITLE_ONLY else f"{title} {body}"
-        if re.search(pat, text, re.I):
-            hits.append(k)
+        if not re.search(pat, text, re.I):
+            continue
+        ctx = CONTEXT.get(k.lower())
+        if ctx and not any(c in f"{title} {employer}".lower() for c in ctx):
+            continue
+        hits.append(k)
     return hits
 
 
@@ -60,7 +73,7 @@ def categorise(employer, title=""):
 def make_job(src, jid, title, employer, location, url, posted="", salary="", body=""):
     if excluded(title):
         return None
-    kws = find_keywords(title, body)
+    kws = find_keywords(title, body, employer or "")
     if not kws:
         return None
     return {
@@ -330,16 +343,18 @@ def _is_facet(title):
 
 
 def scan_page(page, text):
+    """Links on the page whose text has a keyword and whose URL looks like a job."""
     soup = BeautifulSoup(text, "html.parser")
+    pattern = re.compile(page["link_pattern"], re.I) if page.get("link_pattern") else JOB_LINK
     jobs = []
-    for el in soup.find_all(["a", "h2", "h3", "h4"]):
+    for el in soup.find_all("a", href=True):
         title = " ".join(el.get_text(" ").split())
-        if not (4 < len(title) < 150) or _is_facet(title):
+        href = el["href"]
+        if not (4 < len(title) < 150) or _is_facet(title) or href.startswith(("javascript:", "mailto:", "#")):
             continue
-        href = el.get("href") if el.name == "a" else None
-        if href and href.startswith(("javascript:", "mailto:", "#")):
-            continue
-        url = urljoin(page["url"], href) if href else page["url"]
+        url = urljoin(page["url"], href)
+        if not pattern.search(urlparse(url).path + "?" + urlparse(url).query):
+            continue  # navigation / article links, not job adverts
         j = make_job("page", hashlib.md5(f"{url}|{title}".encode()).hexdigest(),
                      title, page["name"], "London", url)
         if j:
@@ -357,10 +372,17 @@ def from_pages():
         if page["name"] in failed:
             continue
         try:
-            r = requests.get(page["url"], headers=UA, timeout=30)
+            r = requests.get(page["url"], headers=BROWSER, timeout=30)
             r.raise_for_status()
-            jobs += scan_page(page, r.text)
+            found = scan_page(page, r.text)
+            jobs += found
+            if CHECK:
+                links = sum(1 for a in BeautifulSoup(r.text, "html.parser").find_all("a", href=True)
+                            if JOB_LINK.search(a["href"]))
+                print(f"  OK   {page['name']:<28} {len(found):>3} matches, {links:>3} job-like links  {page['url']}")
         except Exception as ex:
+            if CHECK:
+                print(f"  FAIL {page['name']:<28} {str(ex)[:120]}")
             failed.add(page["name"])
             errors.append(f"Page {page['name']}: {ex}")
     return jobs
@@ -399,6 +421,10 @@ def update_history(new):
         hist = []
     for j in new:
         hist.append({**j, "first_seen": TODAY})
+    # re-apply the current filters so config changes clean up older entries too
+    hist = [j for j in hist if not excluded(j["title"])
+            and find_keywords(j["title"], "", j.get("employer", ""))
+            and (j["id"].split(":")[0] != "page" or JOB_LINK.search(urlparse(j["url"]).path))]
     keep = CFG.get("site_history_days", 90)
     cutoff = (datetime.date.today() - datetime.timedelta(days=keep)).isoformat()
     hist = [j for j in hist if j["first_seen"] >= cutoff]
@@ -479,6 +505,18 @@ def send_email(body_html, n):
         s.sendmail(msg["From"], [a.strip() for a in to.split(",")], msg.as_string())
 
 
+def check():
+    print("Job boards:")
+    for j in dedupe(from_boards()):
+        print(f"    {j['source']}: {j['title']} – {j['employer']}")
+    print("Careers pages & job-board searches:")
+    pages = from_pages()
+    for j in dedupe(pages):
+        print(f"    {j['source']}: {j['title']}")
+    print("RSS:", len(from_rss()), "matches")
+    print("\nErrors:\n" + "\n".join(errors))
+
+
 def main():
     seen = load_seen()
     all_jobs = dedupe(from_boards() + from_adzuna() + from_reed() + from_rss() + from_pages())
@@ -496,4 +534,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    check() if CHECK else main()

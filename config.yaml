@@ -10,6 +10,21 @@ keywords:
 title_only_keywords:
   - planning
 
+# Extra words that count as the same keyword
+keyword_variants:
+  planning: [planner, planners]
+
+# "planning" only counts if the job title or employer ALSO contains one of
+# these words – this keeps town/environmental planning and drops media,
+# inventory, financial planning etc. Add words if you see good jobs missed.
+keyword_context:
+  planning: [town, urban, regional, spatial, environment, landscape, ecolog,
+             biodiversity, green, open space, park, development, policy,
+             planning officer, planning consultant, planning application,
+             conservation, heritage, transport, infrastructure, local plan,
+             placemaking, regeneration, masterplan, rtpi, council, borough,
+             greater london authority, mayor of london, planning inspectorate]
+
 # Titles containing any of these are dropped (edit freely)
 exclude_phrases:
   - financial planning
@@ -21,6 +36,7 @@ exclude_phrases:
   - event planning
   - wedding planner
   - media planning
+  - media planner
   - care planning
   - discharge planning
   - capacity planning
@@ -31,6 +47,13 @@ exclude_phrases:
   - retirement planning
   - merchandise planning
   - menu planning
+  - media planning
+  - media planner
+  - inventory planning
+  - student number
+  - data analyst
+  - performance and insight
+  - digital planning
 
 location: London
 radius_km: 15
@@ -50,9 +73,10 @@ job_boards:
 
 # ---- Grouping in the email (first match wins; matched on employer + title) ----
 categories:
-  Councils & public bodies: [council, borough, city of london, greater london authority, " gla", transport for london, natural england, environment agency, corporation]
+  Councils & public bodies: [council, department for, defra, historic england, planning inspectorate, mayor of london, borough, city of london, greater london authority, " gla", transport for london, natural england, environment agency, corporation]
   Universities: [university, college, imperial, ucl, "king's", lse, kew]
   Royal Parks: [royal parks]
+  Planning & environmental consultancies: [stantec, tetra tech, arup, wsp, aecom, jacobs, atkins, mott macdonald, ramboll, lichfields, turley, savills, knight frank, jll, cbre, avison young, iceni, quod, barton willmore, stantec, rps, temple group, ecology consultancy, greengage, ackroyd, bsg ecology, middlemarch, tyler grange, aldwych, consultancy, consulting]
   Real estate developers: [berkeley, grosvenor, landsec, british land, argent, lendlease, barratt, taylor wimpey, ballymore, quintain, related argent, canary wharf group, great portland, derwent, peabody, l&q, clarion, countryside, mount anvil, st george, st william, cadogan, howard de walden, shaftesbury]
   Business collectives & BIDs: [bid, business improvement, business partnership, chamber of commerce, london first, cross river partnership, better bankside, team london bridge, northbank, victoria bid]
   Environmental charities & consultancies: [wildlife trust, groundwork, trees for cities, rspb, cieem, thames21, ecology, ecological]

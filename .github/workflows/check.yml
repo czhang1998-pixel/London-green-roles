@@ -1,0 +1,17 @@
+name: Check job sources
+# Tests every source from GitHub's servers and prints what works.
+# Posts nothing and saves nothing. Run it from the Actions tab after editing config.yaml.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: ["config.yaml", "jobbot.py", ".github/workflows/check.yml"]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - run: python jobbot.py --check
