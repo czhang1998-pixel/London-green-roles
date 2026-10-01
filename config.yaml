@@ -23,6 +23,14 @@ exclude_phrases:
   - media planning
   - care planning
   - discharge planning
+  - capacity planning
+  - maintenance planning
+  - resource planning
+  - succession planning
+  - tax planning
+  - retirement planning
+  - merchandise planning
+  - menu planning
 
 location: London
 radius_km: 15
@@ -30,6 +38,15 @@ lookback_days: 7
 site_history_days: 90     # how long jobs stay on the web page
 send_email: false         # set to true to also get the email digest
 email_when_empty: true
+
+# ---- Job websites searched directly (no API keys needed) ----
+# Each is searched once per keyword for London jobs posted in the last
+# lookback_days. Set enabled: false to switch one off.
+# Adzuna/Reed APIs are still used *as well* if you add their keys as secrets.
+job_boards:
+  linkedin: {enabled: true, pages: 3, delay_seconds: 3}   # 25 jobs per page
+  indeed:   {enabled: true, pages: 2, delay_seconds: 3}   # 10-15 jobs per page
+  guardian: {enabled: true, pages: 2, delay_seconds: 3}   # 20 jobs per page
 
 # ---- Grouping in the email (first match wins; matched on employer + title) ----
 categories:
@@ -50,13 +67,41 @@ rss_feeds:
   #   employer: University (jobs.ac.uk)
   #   require_london: true
 
-# ---- Careers pages to watch directly ----
+# ---- Careers pages & job-board searches to watch directly ----
 # The bot reports any link/heading on these pages that contains a keyword.
-# URLs change often – if one fails it's listed at the bottom of the email.
+# If a URL contains {kw}, it is fetched once per keyword (a search results page).
+# URLs change often – if one fails it's listed at the bottom of the page/issue,
+# and the rest of the run carries on. Add any organisation's jobs page here.
 career_pages:
+  # Job boards (cover councils, universities, charities, BIDs, developers)
+  - {name: "DWP Find a Job", url: "https://findajob.dwp.gov.uk/search?q={kw}&w=London&d=10&pp=50"}
+  - {name: "jobs.ac.uk", category: Universities, url: "https://www.jobs.ac.uk/search/?keywords={kw}&location=London"}
+  - {name: "LGJobs", category: Councils & public bodies, url: "https://www.lgjobs.com/jobs/?keywords={kw}&location=London"}
+  - {name: "CharityJob", url: "https://www.charityjob.co.uk/jobs?keywords={kw}&location=London"}
+  - {name: "Environmentjob", url: "https://www.environmentjob.co.uk/jobs?keywords={kw}&location=London"}
+  - {name: "CIEEM jobs", category: Environmental charities & consultancies, url: "https://cieem.net/jobs/"}
+
+  # Public bodies & parks
+  - {name: Greater London Authority, category: Councils & public bodies, url: "https://www.london.gov.uk/who-we-are/careers"}
   - {name: The Royal Parks, category: Royal Parks, url: "https://www.royalparks.org.uk/about-us/jobs"}
+  - {name: Lee Valley Regional Park, category: Councils & public bodies, url: "https://www.leevalleypark.org.uk/jobs"}
+  - {name: Kew Gardens, category: Universities, url: "https://www.kew.org/about-us/jobs"}
+  - {name: Canal & River Trust, category: Environmental charities & consultancies, url: "https://canalrivertrust.org.uk/about-us/jobs"}
+
+  # Environmental charities
   - {name: London Wildlife Trust, category: Environmental charities & consultancies, url: "https://www.wildlondon.org.uk/jobs"}
+  - {name: Trees for Cities, category: Environmental charities & consultancies, url: "https://www.treesforcities.org/about-us/jobs"}
+  - {name: Groundwork London, category: Environmental charities & consultancies, url: "https://www.groundwork.org.uk/london/jobs/"}
+  - {name: Thames21, category: Environmental charities & consultancies, url: "https://www.thames21.org.uk/jobs/"}
+
+  # Business collectives & BIDs
+  - {name: Cross River Partnership, category: Business collectives & BIDs, url: "https://crossriverpartnership.org/jobs/"}
+  - {name: London First, category: Business collectives & BIDs, url: "https://www.londonfirst.co.uk/about-us/careers"}
+
+  # Real estate developers
   - {name: Grosvenor, category: Real estate developers, url: "https://www.grosvenor.com/careers"}
   - {name: British Land, category: Real estate developers, url: "https://www.britishland.com/careers"}
   - {name: Landsec, category: Real estate developers, url: "https://landsec.com/careers"}
   - {name: Berkeley Group, category: Real estate developers, url: "https://www.berkeleygroup.co.uk/careers"}
+  - {name: Argent, category: Real estate developers, url: "https://www.argentllp.co.uk/careers"}
+  - {name: Lendlease, category: Real estate developers, url: "https://www.lendlease.com/uk/careers/"}
