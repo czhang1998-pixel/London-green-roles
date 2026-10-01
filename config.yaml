@@ -10,6 +10,21 @@ keywords:
 title_only_keywords:
   - planning
 
+# Extra words that count as the same keyword
+keyword_variants:
+  planning: [planner, planners]
+
+# "planning" only counts if the job title or employer ALSO contains one of
+# these words – this keeps town/environmental planning and drops media,
+# inventory, financial planning etc. Add words if you see good jobs missed.
+keyword_context:
+  planning: [town, urban, regional, spatial, environment, landscape, ecolog,
+             biodiversity, green, open space, park, development, policy,
+             planning officer, planning consultant, planning application,
+             conservation, heritage, transport, infrastructure, local plan,
+             placemaking, regeneration, masterplan, rtpi, council, borough,
+             greater london authority, mayor of london, planning inspectorate]
+
 # Titles containing any of these are dropped (edit freely)
 exclude_phrases:
   - financial planning
@@ -21,6 +36,7 @@ exclude_phrases:
   - event planning
   - wedding planner
   - media planning
+  - media planner
   - care planning
   - discharge planning
   - capacity planning
@@ -31,6 +47,13 @@ exclude_phrases:
   - retirement planning
   - merchandise planning
   - menu planning
+  - media planning
+  - media planner
+  - inventory planning
+  - student number
+  - data analyst
+  - performance and insight
+  - digital planning
 
 location: London
 radius_km: 15
@@ -45,14 +68,19 @@ email_when_empty: true
 # Adzuna/Reed APIs are still used *as well* if you add their keys as secrets.
 job_boards:
   linkedin: {enabled: true, pages: 3, delay_seconds: 3}   # 25 jobs per page
+  # Indeed blocks GitHub's servers (HTTP 403) – kept on in case that changes;
+  # it costs nothing but one line in the 'couldn't check' list. Works locally.
   indeed:   {enabled: true, pages: 2, delay_seconds: 3}   # 10-15 jobs per page
-  guardian: {enabled: true, pages: 2, delay_seconds: 3}   # 20 jobs per page
+  # Guardian Jobs blocks GitHub's servers on its normal pages, but its RSS
+  # feed works – see rss_feeds below. Leave this off unless running locally.
+  guardian: {enabled: false, pages: 2, delay_seconds: 3}
 
 # ---- Grouping in the email (first match wins; matched on employer + title) ----
 categories:
-  Councils & public bodies: [council, borough, city of london, greater london authority, " gla", transport for london, natural england, environment agency, corporation]
+  Councils & public bodies: [council, department for, defra, historic england, planning inspectorate, mayor of london, borough, city of london, greater london authority, " gla", transport for london, natural england, environment agency, corporation]
   Universities: [university, college, imperial, ucl, "king's", lse, kew]
   Royal Parks: [royal parks]
+  Planning & environmental consultancies: [stantec, tetra tech, arup, wsp, aecom, jacobs, atkins, mott macdonald, ramboll, lichfields, turley, savills, knight frank, jll, cbre, avison young, iceni, quod, barton willmore, stantec, rps, temple group, ecology consultancy, greengage, ackroyd, bsg ecology, middlemarch, tyler grange, aldwych, consultancy, consulting]
   Real estate developers: [berkeley, grosvenor, landsec, british land, argent, lendlease, barratt, taylor wimpey, ballymore, quintain, related argent, canary wharf group, great portland, derwent, peabody, l&q, clarion, countryside, mount anvil, st george, st william, cadogan, howard de walden, shaftesbury]
   Business collectives & BIDs: [bid, business improvement, business partnership, chamber of commerce, london first, cross river partnership, better bankside, team london bridge, northbank, victoria bid]
   Environmental charities & consultancies: [wildlife trust, groundwork, trees for cities, rspb, cieem, thames21, ecology, ecological]
@@ -61,7 +89,13 @@ categories:
 # Run a search on the site (London + keyword), then copy its RSS link here.
 # Good candidates: jobs.ac.uk (universities), Guardian Jobs, CIEEM jobs,
 # Environment Job, LGJobs / councils' own vacancy pages if they offer RSS.
+# If a URL contains {kw}, the feed is fetched once per keyword.
 rss_feeds:
+  - name: Guardian Jobs (RSS)
+    url: "https://jobs.theguardian.com/jobsrss/london/?keywords={kw}"
+    employer: Guardian Jobs
+    employer_in_title: true
+    require_london: false
   # - name: jobs.ac.uk – biodiversity London
   #   url: PASTE_RSS_LINK_HERE
   #   employer: University (jobs.ac.uk)
@@ -77,31 +111,36 @@ career_pages:
   - {name: "DWP Find a Job", url: "https://findajob.dwp.gov.uk/search?q={kw}&w=London&d=10&pp=50"}
   - {name: "jobs.ac.uk", category: Universities, url: "https://www.jobs.ac.uk/search/?keywords={kw}&location=London"}
   - {name: "LGJobs", category: Councils & public bodies, url: "https://www.lgjobs.com/jobs/?keywords={kw}&location=London"}
+  # Blocks GitHub's servers (403/405) – switched off; their jobs usually appear on LinkedIn.
+  #  - {name: "LocalGov Jobs", category: Councils & public bodies, url: "https://jobs.localgov.co.uk/jobs/london/?keywords={kw}"}
+  - {name: "Jobs Go Public (London)", category: Councils & public bodies, url: "https://london.jobsgopublic.com/"}
   - {name: "CharityJob", url: "https://www.charityjob.co.uk/jobs?keywords={kw}&location=London"}
   - {name: "Environmentjob", url: "https://www.environmentjob.co.uk/jobs?keywords={kw}&location=London"}
-  - {name: "CIEEM jobs", category: Environmental charities & consultancies, url: "https://cieem.net/jobs/"}
+  - {name: "CIEEM jobs", category: Environmental charities & consultancies, url: "https://cieem.net/ecology-and-environmental-management-jobs/"}
 
   # Public bodies & parks
-  - {name: Greater London Authority, category: Councils & public bodies, url: "https://www.london.gov.uk/who-we-are/careers"}
-  - {name: The Royal Parks, category: Royal Parks, url: "https://www.royalparks.org.uk/about-us/jobs"}
-  - {name: Lee Valley Regional Park, category: Councils & public bodies, url: "https://www.leevalleypark.org.uk/jobs"}
-  - {name: Kew Gardens, category: Universities, url: "https://www.kew.org/about-us/jobs"}
-  - {name: Canal & River Trust, category: Environmental charities & consultancies, url: "https://canalrivertrust.org.uk/about-us/jobs"}
+  - {name: Greater London Authority, category: Councils & public bodies, url: "https://www.london.gov.uk/take-part/working-city-hall/current-vacancies"}
+  - {name: The Royal Parks, category: Royal Parks, url: "https://www.royalparks.org.uk/careers"}
+  - {name: Lee Valley Regional Park, category: Councils & public bodies, url: "https://www.leevalleypark.org.uk/job-vacancies"}
+  - {name: Kew Gardens, category: Universities, url: "https://careers.kew.org/vacancies.html"}
+  # Blocks GitHub's servers (403/405) – switched off; their jobs usually appear on LinkedIn.
+  #  - {name: Canal & River Trust, category: Environmental charities & consultancies, url: "https://careers-canalrivertrust.icims.com/jobs/search?ss=1&in_iframe=1"}
 
   # Environmental charities
   - {name: London Wildlife Trust, category: Environmental charities & consultancies, url: "https://www.wildlondon.org.uk/jobs"}
-  - {name: Trees for Cities, category: Environmental charities & consultancies, url: "https://www.treesforcities.org/about-us/jobs"}
-  - {name: Groundwork London, category: Environmental charities & consultancies, url: "https://www.groundwork.org.uk/london/jobs/"}
-  - {name: Thames21, category: Environmental charities & consultancies, url: "https://www.thames21.org.uk/jobs/"}
+  - {name: Trees for Cities, category: Environmental charities & consultancies, url: "https://www.treesforcities.org/about-us/careers"}
+  # Blocks GitHub's servers (403/405) – switched off; their jobs usually appear on LinkedIn.
+  #  - {name: Groundwork London, category: Environmental charities & consultancies, url: "https://www.groundwork.org.uk/jobs/"}
+  - {name: Thames21, category: Environmental charities & consultancies, url: "https://www.charityjob.co.uk/organisation/thames21"}
 
   # Business collectives & BIDs
-  - {name: Cross River Partnership, category: Business collectives & BIDs, url: "https://crossriverpartnership.org/jobs/"}
-  - {name: London First, category: Business collectives & BIDs, url: "https://www.londonfirst.co.uk/about-us/careers"}
+  - {name: BusinessLDN (London First), category: Business collectives & BIDs, url: "https://www.businessldn.co.uk/about-us/work-for-us", link_pattern: "job|vacanc|career|role|\\.pdf"}
 
   # Real estate developers
   - {name: Grosvenor, category: Real estate developers, url: "https://www.grosvenor.com/careers"}
   - {name: British Land, category: Real estate developers, url: "https://www.britishland.com/careers"}
-  - {name: Landsec, category: Real estate developers, url: "https://landsec.com/careers"}
-  - {name: Berkeley Group, category: Real estate developers, url: "https://www.berkeleygroup.co.uk/careers"}
-  - {name: Argent, category: Real estate developers, url: "https://www.argentllp.co.uk/careers"}
+  - {name: Landsec, category: Real estate developers, url: "https://landsec.com/careers/roles-and-opportunities"}
+  - {name: Berkeley Group, category: Real estate developers, url: "https://experiencedhires.berkeleygroup.co.uk/"}
+  # Blocks GitHub's servers (403/405) – switched off; their jobs usually appear on LinkedIn.
+  #  - {name: Related Argent, category: Real estate developers, url: "https://www.relatedargent.co.uk/careers"}
   - {name: Lendlease, category: Real estate developers, url: "https://www.lendlease.com/uk/careers/"}
