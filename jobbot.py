@@ -305,11 +305,15 @@ def from_boards():
 
 def from_rss():
     jobs = []
+    feeds = []
     for feed in CFG.get("rss_feeds") or []:
+        kws = KEYWORDS if "{kw}" in feed["url"] else [None]
+        feeds += [{**feed, "url": feed["url"].replace("{kw}", quote_plus(k)) if k else feed["url"]} for k in kws]
+    for feed in feeds:
         try:
-            f = feedparser.parse(feed["url"], agent=UA["User-Agent"])
+            f = feedparser.parse(feed["url"], agent=BROWSER["User-Agent"])
             if f.bozo and not f.entries:
-                raise ValueError("feed unreadable")
+                raise ValueError(f"feed unreadable (HTTP {f.get('status', '?')})")
             for e in f.entries:
                 text = f"{e.get('title','')} {e.get('summary','')}"
                 if feed.get("require_london", True) and "london" not in text.lower():
@@ -513,7 +517,10 @@ def check():
     pages = from_pages()
     for j in dedupe(pages):
         print(f"    {j['source']}: {j['title']}")
-    print("RSS:", len(from_rss()), "matches")
+    rss = from_rss()
+    print("RSS:", len(rss), "matches")
+    for j in dedupe(rss):
+        print(f"    {j['source']}: {j['title']}")
     print("\nErrors:\n" + "\n".join(errors))
 
 
