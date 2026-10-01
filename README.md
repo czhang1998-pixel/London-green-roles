@@ -14,25 +14,35 @@ Every Monday at 07:00 UTC this bot looks for **new London jobs** matching
 ## Where it looks
 | Source | Covers | Needs |
 |---|---|---|
-| Adzuna API | Very broad aggregator: councils, universities, developers, consultancies | free key |
-| Reed API | UK's largest job board: lots of council, developer and consultancy roles | free key |
-| DWP Find a Job, Guardian Jobs, LGJobs | Councils and the public sector | nothing |
+| **LinkedIn** | Developers, consultancies, BIDs, universities, councils | nothing |
+| **Indeed** | The biggest UK aggregator: councils, universities, developers | nothing |
+| **Guardian Jobs** | Councils, the public sector, charities, universities | nothing |
+| DWP Find a Job, LGJobs | Councils and the public sector | nothing |
 | jobs.ac.uk | Universities | nothing |
 | CharityJob, Environmentjob, CIEEM | Ecology and environment charities, consultancies | nothing |
 | Careers pages | GLA, Royal Parks, Kew, Lee Valley, Canal & River Trust, London Wildlife Trust, Trees for Cities, Groundwork, Thames21, Cross River Partnership, London First, Grosvenor, British Land, Landsec, Berkeley, Argent, Lendlease | nothing |
+| Adzuna / Reed APIs | Optional extras: used only if you add their free keys | free key |
 
-No bot can read every employer's website, so the two APIs do most of the work:
-nearly all councils, universities and developers re-post their jobs on those
-boards. You can add any other organisation's jobs page in `config.yaml`. If a
-site is down or has changed its layout, it's listed under "Sources that
-couldn't be checked" and the rest of the run carries on.
+**About scraping big job sites.** LinkedIn and Indeed don't offer a public
+feed, so the bot reads their public search results pages, the same pages you
+see when you search without logging in. Be aware that:
+- Their terms of use forbid automated scraping. One small search a week for
+  personal use is low-key, but it's your call. Switch either off with
+  `enabled: false` under `job_boards` in `config.yaml`.
+- They block traffic from cloud servers. **Indeed in particular often blocks
+  GitHub's servers**, and when that happens the weekly issue says
+  "HTTP 403 – the site blocked the request". If it keeps happening, the free
+  Adzuna and Reed keys are the reliable fallback, because Adzuna carries most
+  Indeed listings anyway.
+- If a site changes its layout, that source returns nothing until the scraper
+  is updated.
 
 `planning` only counts when it's in the **job title**, and titles such as
 "financial planning" or "workforce planning" are excluded. Otherwise you'd get
 thousands of unrelated jobs.
 
 ## Setup (about 15 minutes, free)
-1. **Free API keys** (strongly recommended)
+1. **Free API keys** (optional extra coverage – skip if you like)
    - Adzuna: https://developer.adzuna.com → sign up → copy the App ID and App Key
    - Reed: https://www.reed.co.uk/developers → sign up → copy the API key
 2. **Secrets**: in the repo, go to Settings → Secrets and variables → Actions →

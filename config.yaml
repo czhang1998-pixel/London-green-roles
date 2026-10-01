@@ -39,6 +39,15 @@ site_history_days: 90     # how long jobs stay on the web page
 send_email: false         # set to true to also get the email digest
 email_when_empty: true
 
+# ---- Job websites searched directly (no API keys needed) ----
+# Each is searched once per keyword for London jobs posted in the last
+# lookback_days. Set enabled: false to switch one off.
+# Adzuna/Reed APIs are still used *as well* if you add their keys as secrets.
+job_boards:
+  linkedin: {enabled: true, pages: 3, delay_seconds: 3}   # 25 jobs per page
+  indeed:   {enabled: true, pages: 2, delay_seconds: 3}   # 10-15 jobs per page
+  guardian: {enabled: true, pages: 2, delay_seconds: 3}   # 20 jobs per page
+
 # ---- Grouping in the email (first match wins; matched on employer + title) ----
 categories:
   Councils & public bodies: [council, borough, city of london, greater london authority, " gla", transport for london, natural england, environment agency, corporation]
@@ -67,7 +76,6 @@ career_pages:
   # Job boards (cover councils, universities, charities, BIDs, developers)
   - {name: "DWP Find a Job", url: "https://findajob.dwp.gov.uk/search?q={kw}&w=London&d=10&pp=50"}
   - {name: "jobs.ac.uk", category: Universities, url: "https://www.jobs.ac.uk/search/?keywords={kw}&location=London"}
-  - {name: "Guardian Jobs", url: "https://jobs.theguardian.com/jobs/london/?keywords={kw}"}
   - {name: "LGJobs", category: Councils & public bodies, url: "https://www.lgjobs.com/jobs/?keywords={kw}&location=London"}
   - {name: "CharityJob", url: "https://www.charityjob.co.uk/jobs?keywords={kw}&location=London"}
   - {name: "Environmentjob", url: "https://www.environmentjob.co.uk/jobs?keywords={kw}&location=London"}
