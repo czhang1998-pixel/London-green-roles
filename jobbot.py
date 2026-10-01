@@ -1,6 +1,7 @@
 """
 London green-jobs weekly digest bot.
-Sources: Adzuna API, Reed API, RSS feeds, and watched careers pages.
+Sources: Adzuna API, Reed API, RSS feeds, job-board searches and careers pages.
+Outputs: docs/index.html (web page), digest.md (weekly GitHub issue), optional email.
 Settings live in config.yaml; secrets come from environment variables.
 """
 import os, re, json, hashlib, smtplib, datetime, html
@@ -8,6 +9,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 import requests, yaml, feedparser
+from urllib.parse import quote_plus, urljoin
 from bs4 import BeautifulSoup
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -67,6 +69,7 @@ def make_job(src, jid, title, employer, location, url, posted="", salary="", bod
 def from_adzuna():
     app_id, app_key = os.getenv("ADZUNA_APP_ID"), os.getenv("ADZUNA_APP_KEY")
     if not (app_id and app_key):
+        errors.append("Adzuna skipped: add ADZUNA_APP_ID and ADZUNA_APP_KEY secrets for much wider coverage")
         return []
     jobs = []
     for kw in KEYWORDS:
@@ -97,6 +100,7 @@ def from_adzuna():
 def from_reed():
     key = os.getenv("REED_API_KEY")
     if not key:
+        errors.append("Reed skipped: add the REED_API_KEY secret for much wider coverage")
         return []
     jobs = []
     cutoff = datetime.date.today() - datetime.timedelta(days=CFG["lookback_days"])
@@ -150,27 +154,55 @@ def from_rss():
     return jobs
 
 
-def from_pages():
-    """Scan careers pages for links/headings containing keywords."""
-    jobs = []
+def _expand_pages():
+    """Pages whose URL contains {kw} are fetched once per keyword (search pages)."""
     for page in CFG.get("career_pages") or []:
+        if "{kw}" in page["url"]:
+            for kw in KEYWORDS:
+                yield {**page, "url": page["url"].replace("{kw}", quote_plus(kw)), "_kw": kw}
+        else:
+            yield page
+
+
+def _is_facet(title):
+    """Skip search-filter links like 'Biodiversity (12)' or a bare keyword."""
+    t = re.sub(r"[\s(]*\d[\d,]*\)?\s*$", "", title).strip().lower()
+    return t in {k.lower() for k in KEYWORDS} or t.startswith(("search", "sort by", "filter", "jobs in"))
+
+
+def scan_page(page, text):
+    soup = BeautifulSoup(text, "html.parser")
+    jobs = []
+    for el in soup.find_all(["a", "h2", "h3", "h4"]):
+        title = " ".join(el.get_text(" ").split())
+        if not (4 < len(title) < 150) or _is_facet(title):
+            continue
+        href = el.get("href") if el.name == "a" else None
+        if href and href.startswith(("javascript:", "mailto:", "#")):
+            continue
+        url = urljoin(page["url"], href) if href else page["url"]
+        j = make_job("page", hashlib.md5(f"{url}|{title}".encode()).hexdigest(),
+                     title, page["name"], "London", url)
+        if j:
+            if page.get("category"):
+                j["category"] = page["category"]
+            j["source"] = page["name"]
+            jobs.append(j)
+    return jobs
+
+
+def from_pages():
+    """Scan careers pages and job-board search pages for keyword links/headings."""
+    jobs, failed = [], set()
+    for page in _expand_pages():
+        if page["name"] in failed:
+            continue
         try:
             r = requests.get(page["url"], headers=UA, timeout=30)
             r.raise_for_status()
-            soup = BeautifulSoup(r.text, "html.parser")
-            for el in soup.find_all(["a", "h2", "h3", "h4"]):
-                title = " ".join(el.get_text(" ").split())
-                if not (4 < len(title) < 150):
-                    continue
-                href = el.get("href") if el.name == "a" else None
-                url = requests.compat.urljoin(page["url"], href) if href else page["url"]
-                j = make_job("page", hashlib.md5(f"{page['url']}|{title}".encode()).hexdigest(),
-                             title, page["name"], "London", url)
-                if j:
-                    j["category"] = page.get("category", j["category"])
-                    j["source"] = f"{page['name']} careers page"
-                    jobs.append(j)
+            jobs += scan_page(page, r.text)
         except Exception as ex:
+            failed.add(page["name"])
             errors.append(f"Page {page['name']}: {ex}")
     return jobs
 
@@ -248,10 +280,34 @@ def build_html(jobs):
     return "\n".join(parts)
 
 
+def build_markdown(jobs):
+    """Digest posted as a weekly GitHub Issue (GitHub emails you about it)."""
+    esc = lambda t: re.sub(r"([\[\]|*_`<>])", r"\\\1", t or "")
+    page = os.getenv("SITE_URL", "")
+    out = [f"**{len(jobs)} new London job(s)** matching: {', '.join(KEYWORDS)}"]
+    if page:
+        out.append(f"\nFull searchable list (last {CFG.get('site_history_days', 90)} days): {page}")
+    order = list(CFG["categories"].keys()) + ["Other"]
+    for cat in order:
+        group = sorted((j for j in jobs if j["category"] == cat), key=lambda x: x["title"])
+        if not group: continue
+        out.append(f"\n### {cat} ({len(group)})")
+        for j in group:
+            meta = " · ".join(filter(None, [j["employer"], j["location"], j["salary"], j["posted"]]))
+            out.append(f"- [{esc(j['title'])}]({j['url']}) — {esc(meta)}  \n  <sub>matched: {', '.join(j['keywords'])} · via {esc(j['source'])}</sub>")
+    if not jobs:
+        out.append("\nNo new matching jobs this week.")
+    if errors:
+        out.append("\n<details><summary>Sources that couldn't be checked this week (" + str(len(errors)) + ")</summary>\n")
+        out += [f"- {esc(e)[:300]}" for e in errors]
+        out.append("\n</details>")
+    return "\n".join(out)[:60000]
+
+
 def send_email(body_html, n):
     host, to = os.getenv("SMTP_HOST"), os.getenv("EMAIL_TO")
     if not (host and to):
-        print("No SMTP settings – digest written to digest.html only.")
+        print("No SMTP settings – skipping email (digest.md still written).")
         return
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"London green jobs: {n} new ({TODAY})"
@@ -275,6 +331,7 @@ def main():
         body = build_html(new)
         if new or CFG.get("email_when_empty", True):
             send_email(body, len(new))
+    open(os.path.join(HERE, "digest.md"), "w", encoding="utf-8").write(build_markdown(new))
     save_seen(seen)
     print(f"{len(new)} new jobs; {len(errors)} source errors.")
 
