@@ -1,0 +1,62 @@
+# ---- What to look for ----
+keywords:
+  - ecology manager
+  - biodiversity
+  - green space
+  - planning
+
+# "planning" alone would pull in thousands of unrelated jobs if matched in
+# descriptions, so it only counts when it's in the job TITLE.
+title_only_keywords:
+  - planning
+
+# Titles containing any of these are dropped (edit freely)
+exclude_phrases:
+  - financial planning
+  - financial planner
+  - workforce planning
+  - demand planning
+  - production planning
+  - supply planning
+  - event planning
+  - wedding planner
+  - media planning
+  - care planning
+  - discharge planning
+
+location: London
+radius_km: 15
+lookback_days: 7
+site_history_days: 90     # how long jobs stay on the web page
+send_email: false         # set to true to also get the email digest
+email_when_empty: true
+
+# ---- Grouping in the email (first match wins; matched on employer + title) ----
+categories:
+  Councils & public bodies: [council, borough, city of london, greater london authority, " gla", transport for london, natural england, environment agency, corporation]
+  Universities: [university, college, imperial, ucl, "king's", lse, kew]
+  Royal Parks: [royal parks]
+  Real estate developers: [berkeley, grosvenor, landsec, british land, argent, lendlease, barratt, taylor wimpey, ballymore, quintain, related argent, canary wharf group, great portland, derwent, peabody, l&q, clarion, countryside, mount anvil, st george, st william, cadogan, howard de walden, shaftesbury]
+  Business collectives & BIDs: [bid, business improvement, business partnership, chamber of commerce, london first, cross river partnership, better bankside, team london bridge, northbank, victoria bid]
+  Environmental charities & consultancies: [wildlife trust, groundwork, trees for cities, rspb, cieem, thames21, ecology, ecological]
+
+# ---- RSS feeds ----
+# Run a search on the site (London + keyword), then copy its RSS link here.
+# Good candidates: jobs.ac.uk (universities), Guardian Jobs, CIEEM jobs,
+# Environment Job, LGJobs / councils' own vacancy pages if they offer RSS.
+rss_feeds:
+  # - name: jobs.ac.uk – biodiversity London
+  #   url: PASTE_RSS_LINK_HERE
+  #   employer: University (jobs.ac.uk)
+  #   require_london: true
+
+# ---- Careers pages to watch directly ----
+# The bot reports any link/heading on these pages that contains a keyword.
+# URLs change often – if one fails it's listed at the bottom of the email.
+career_pages:
+  - {name: The Royal Parks, category: Royal Parks, url: "https://www.royalparks.org.uk/about-us/jobs"}
+  - {name: London Wildlife Trust, category: Environmental charities & consultancies, url: "https://www.wildlondon.org.uk/jobs"}
+  - {name: Grosvenor, category: Real estate developers, url: "https://www.grosvenor.com/careers"}
+  - {name: British Land, category: Real estate developers, url: "https://www.britishland.com/careers"}
+  - {name: Landsec, category: Real estate developers, url: "https://landsec.com/careers"}
+  - {name: Berkeley Group, category: Real estate developers, url: "https://www.berkeleygroup.co.uk/careers"}
