@@ -16,8 +16,8 @@ Every Monday at 07:00 UTC this bot looks for **new London jobs** matching
 |---|---|---|
 | **LinkedIn** | Developers, consultancies, BIDs, universities, councils | nothing |
 | **Indeed** | The biggest UK aggregator: councils, universities, developers | nothing |
-| **Guardian Jobs** | Councils, the public sector, charities, universities | nothing |
-| DWP Find a Job, LGJobs | Councils and the public sector | nothing |
+| **Guardian Jobs** (via its RSS feed) | Councils, the public sector, charities, universities | nothing |
+| DWP Find a Job, LGJobs, Jobs Go Public | Councils and the public sector | nothing |
 | jobs.ac.uk | Universities | nothing |
 | CharityJob, Environmentjob, CIEEM | Ecology and environment charities, consultancies | nothing |
 | Careers pages | GLA, Royal Parks, Kew, Lee Valley, Canal & River Trust, London Wildlife Trust, Trees for Cities, Groundwork, Thames21, Cross River Partnership, London First, Grosvenor, British Land, Landsec, Berkeley, Argent, Lendlease | nothing |
@@ -37,9 +37,15 @@ see when you search without logging in. Be aware that:
 - If a site changes its layout, that source returns nothing until the scraper
   is updated.
 
-`planning` only counts when it's in the **job title**, and titles such as
-"financial planning" or "workforce planning" are excluded. Otherwise you'd get
-thousands of unrelated jobs.
+`planning` (and `planner`) only counts when it's in the **job title** *and*
+the title or employer also has a built-environment word (town, urban,
+environmental, policy, development, transport, council, borough…). This keeps
+Town Planners and Planning Officers and drops media, inventory or financial
+planning. Edit the word list under `keyword_context` in `config.yaml`.
+
+**Checking sources:** Actions → "Check job sources" → Run workflow. It tests
+every site from GitHub's servers and lists what each one found, without posting
+or saving anything. Use it after editing `config.yaml`.
 
 ## Setup (about 15 minutes, free)
 1. **Free API keys** (optional extra coverage – skip if you like)

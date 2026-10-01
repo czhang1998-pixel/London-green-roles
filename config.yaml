@@ -111,7 +111,8 @@ career_pages:
   - {name: "DWP Find a Job", url: "https://findajob.dwp.gov.uk/search?q={kw}&w=London&d=10&pp=50"}
   - {name: "jobs.ac.uk", category: Universities, url: "https://www.jobs.ac.uk/search/?keywords={kw}&location=London"}
   - {name: "LGJobs", category: Councils & public bodies, url: "https://www.lgjobs.com/jobs/?keywords={kw}&location=London"}
-  - {name: "LocalGov Jobs", category: Councils & public bodies, url: "https://jobs.localgov.co.uk/jobs/london/?keywords={kw}"}
+  # Blocks GitHub's servers (403/405) – switched off; their jobs usually appear on LinkedIn.
+  #  - {name: "LocalGov Jobs", category: Councils & public bodies, url: "https://jobs.localgov.co.uk/jobs/london/?keywords={kw}"}
   - {name: "Jobs Go Public (London)", category: Councils & public bodies, url: "https://london.jobsgopublic.com/"}
   - {name: "CharityJob", url: "https://www.charityjob.co.uk/jobs?keywords={kw}&location=London"}
   - {name: "Environmentjob", url: "https://www.environmentjob.co.uk/jobs?keywords={kw}&location=London"}
@@ -122,12 +123,14 @@ career_pages:
   - {name: The Royal Parks, category: Royal Parks, url: "https://www.royalparks.org.uk/careers"}
   - {name: Lee Valley Regional Park, category: Councils & public bodies, url: "https://www.leevalleypark.org.uk/job-vacancies"}
   - {name: Kew Gardens, category: Universities, url: "https://careers.kew.org/vacancies.html"}
-  - {name: Canal & River Trust, category: Environmental charities & consultancies, url: "https://careers-canalrivertrust.icims.com/jobs/search?ss=1&in_iframe=1"}
+  # Blocks GitHub's servers (403/405) – switched off; their jobs usually appear on LinkedIn.
+  #  - {name: Canal & River Trust, category: Environmental charities & consultancies, url: "https://careers-canalrivertrust.icims.com/jobs/search?ss=1&in_iframe=1"}
 
   # Environmental charities
   - {name: London Wildlife Trust, category: Environmental charities & consultancies, url: "https://www.wildlondon.org.uk/jobs"}
   - {name: Trees for Cities, category: Environmental charities & consultancies, url: "https://www.treesforcities.org/about-us/careers"}
-  - {name: Groundwork London, category: Environmental charities & consultancies, url: "https://www.groundwork.org.uk/jobs/"}
+  # Blocks GitHub's servers (403/405) – switched off; their jobs usually appear on LinkedIn.
+  #  - {name: Groundwork London, category: Environmental charities & consultancies, url: "https://www.groundwork.org.uk/jobs/"}
   - {name: Thames21, category: Environmental charities & consultancies, url: "https://www.charityjob.co.uk/organisation/thames21"}
 
   # Business collectives & BIDs
@@ -138,5 +141,6 @@ career_pages:
   - {name: British Land, category: Real estate developers, url: "https://www.britishland.com/careers"}
   - {name: Landsec, category: Real estate developers, url: "https://landsec.com/careers/roles-and-opportunities"}
   - {name: Berkeley Group, category: Real estate developers, url: "https://experiencedhires.berkeleygroup.co.uk/"}
-  - {name: Related Argent, category: Real estate developers, url: "https://www.relatedargent.co.uk/careers"}
+  # Blocks GitHub's servers (403/405) – switched off; their jobs usually appear on LinkedIn.
+  #  - {name: Related Argent, category: Real estate developers, url: "https://www.relatedargent.co.uk/careers"}
   - {name: Lendlease, category: Real estate developers, url: "https://www.lendlease.com/uk/careers/"}
